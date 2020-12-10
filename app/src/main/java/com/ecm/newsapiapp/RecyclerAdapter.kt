@@ -12,6 +12,7 @@ import org.w3c.dom.Text
 
 class RecyclerAdapter (private var titles: List<String>,
                        private var details: List<String>,
+                       private var dates: List<String>,
                        private var images: List<Int>) :
 RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(){
 
@@ -19,6 +20,7 @@ RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(){
 
         val itemTitle: TextView = itemView.findViewById(R.id.tv_title)
         val itemDetail: TextView = itemView.findViewById(R.id.tv_description)
+        val itemDate: TextView = itemView.findViewById(R.id.tv_date)
         val itemPicture: ImageView = itemView.findViewById(R.id.iv_image)
 
         init {
@@ -42,6 +44,7 @@ RecyclerView.Adapter<RecyclerAdapter.ViewHolder>(){
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.itemTitle.text = titles[position]
         holder.itemDetail.text = details[position]
+        holder.itemDate.text = dates[position]
         holder.itemPicture.setImageResource(images[position])
     }
 }

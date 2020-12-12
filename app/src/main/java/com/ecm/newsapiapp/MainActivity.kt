@@ -26,10 +26,11 @@ class MainActivity : AppCompatActivity() {
     val LANG = "fr"
 //    val API_KEY = "ee05a54c472449fd9afb26a8f0756a88"
     val API_KEY = "d31f5fa5f03443dd8a1b9e3fde92ec34"
-    val API_URL_SOURCES = "https://newsapi.org/v2/sources?apiKey=%s&language=%s".format(API_KEY, LANG)
-    val API_URL = "https://newsapi.org/v2/everything?apiKey=%s&language=%s&sources=google-news-fr".format(API_KEY, LANG)
+    val API_URL_SOURCES = "https://newsapi.org/v2/sources?apiKey=$API_KEY&language=$LANG"
+    val API_URL = "https://newsapi.org/v2/everything?apiKey=$API_KEY&language=$LANG"
 
     var sources = JSONArray()
+    var selectedSource = ""
 
     lateinit var queue: RequestQueue
     lateinit var rv_recyclerView: RecyclerView
@@ -41,9 +42,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         queue = Volley.newRequestQueue(this)
 
-        requestEverythingFromAPI()
+//        requestArticlesFromAPI()
         requestSourcesFromAPI()
-//        postToList()
 
         rv_recyclerView = findViewById<RecyclerView>(R.id.rv_recyclerView)
 
@@ -69,12 +69,12 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        super.onOptionsItemSelected(item)
-//        currentSourceId = sources.getJSONObject(item.itemId).getString("id")
-//        currentPage = 1
-//        getArticles(currentSourceId, currentPage)
-//        return true
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        super.onOptionsItemSelected(item)
+        selectedSource = sources.getJSONObject(item.itemId).getString("id")
+        requestArticlesFromAPI(selectedSource)
+        return true
+    }
 
     private fun addToList(title: String, description: String, date: String, image: Int) {
         titlesList.add(title)
@@ -119,8 +119,8 @@ class MainActivity : AppCompatActivity() {
         queue.add(getRequest)
     }
 
-    private fun requestEverythingFromAPI() {
-        val url = API_URL
+    private fun requestArticlesFromAPI(selectedSource: String) {
+        val url = "$API_URL&sources=$selectedSource"
         val textView = findViewById<TextView>(R.id.texty)
 
         val getRequest: JsonObjectRequest =

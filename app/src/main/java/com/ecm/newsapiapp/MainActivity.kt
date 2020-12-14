@@ -1,19 +1,21 @@
 package com.ecm.newsapiapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.view.isVisible
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.observe
 import androidx.recyclerview.widget.RecyclerView
-import com.android.volley.AuthFailureError
 import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
-import org.json.JSONObject
 
 
 class MainActivity : AppCompatActivity() {
@@ -34,25 +36,41 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var queue: RequestQueue
     lateinit var rv_recyclerView: RecyclerView
-    lateinit var textView: TextView
+    lateinit var progressBar: ProgressBar
 
+    var articlesData = ArrayList<Article>()
+    var articlesLiveData = MutableLiveData<ArrayList<Article>>()
+
+    lateinit var textView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         queue = Volley.newRequestQueue(this)
+        progressBar = findViewById<ProgressBar>(R.id.progressBar)
 
-//        requestArticlesFromAPI()
         requestSourcesFromAPI()
 
-        rv_recyclerView = findViewById<RecyclerView>(R.id.rv_recyclerView)
+        val recyclerAdapter = RecyclerAdapter { article -> adapterOnClick(article) }
 
-        rv_recyclerView.layoutManager = LinearLayoutManager(this)
-        rv_recyclerView.adapter = RecyclerAdapter(titlesList, descList, dateList, imagesList)
+        val recyclerView: RecyclerView = findViewById(R.id.rv_recyclerView)
+        recyclerView.adapter = recyclerAdapter
+        articlesLiveData.observe(this) {
+            it?.let {
+                recyclerAdapter.submitList(it as MutableList<Article>)
+            }
+        }
     }
 
+    private fun adapterOnClick(article: Article) {
+        val intent = Intent(this, ArticleReading()::class.java)
+//        intent.putExtra(FLOWER_ID, flower.id)
+        startActivity(intent)
+    }
+
+
+//    menu de selection des sources
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        // Inflate the main_menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main_menu, menu)
         return true
     }
@@ -76,39 +94,43 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun addToList(title: String, description: String, date: String, image: Int) {
-        titlesList.add(title)
-        descList.add(description)
-        dateList.add(date)
-        imagesList.add(image)
+//    private fun addToList(title: String, description: String, date: String, image: Int) {
+//        titlesList.add(title)
+//        descList.add(description)
+//        dateList.add(date)
+//        imagesList.add(image)
+//    }
+//
+//    private fun clearRecycler() {
+//        titlesList.clear()
+//        descList.clear()
+//        dateList.clear()
+//        imagesList.clear()
+//    }
 
-    }
-
-    private fun parseResponse(response: JSONObject) {
-        val articleArray: JSONArray = response.getJSONArray("articles")
-        for (i in 0 until articleArray.length()) {
-            val article = articleArray.getJSONObject(i)
-            val title = article.getString("title").take(50)
-            val description = article.getString("author")
-            val date = article.getString("publishedAt").substring(0, 10)
-            addToList(title, description, date, R.mipmap.ic_launcher_round)
+    private fun parseArticles(articles: JSONArray) {
+        for (i in 0 until articles.length()) {
+            val article = articles.getJSONObject(i)
+            val articlePreview = Article(article)
+            articlesData.add(articlePreview)
         }
     }
 
+
     private fun requestSourcesFromAPI() {
+        progressBar.isVisible = true
         val url = API_URL_SOURCES
         val textView = findViewById<TextView>(R.id.texty)
 
         val getRequest: JsonObjectRequest =
             object : JsonObjectRequest(
                 Method.GET, url, null,
-                Response.Listener { response ->
+                Response.Listener{ response ->
                     sources = response.getJSONArray("sources")
+                    progressBar.isVisible = false
                 },
-                Response.ErrorListener { error -> textView.text = "No sources, error: %s".format(error.toString())
-                }
+                Response.ErrorListener { error -> textView.text = "No sources, error: %s".format(error.toString()) }
             ) {
-                @Throws(AuthFailureError::class)
                 override fun getHeaders(): Map<String, String> {
                     val params: MutableMap<String, String> =
                         HashMap()
@@ -120,6 +142,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestArticlesFromAPI(selectedSource: String) {
+        progressBar.isVisible = true
         val url = "$API_URL&sources=$selectedSource"
         val textView = findViewById<TextView>(R.id.texty)
 
@@ -127,13 +150,11 @@ class MainActivity : AppCompatActivity() {
             object : JsonObjectRequest(
                 Method.GET, url, null,
                 Response.Listener { response ->
-//                    textView.text = "Response is: ${response.toString().substring(0, 500)}"
-                    parseResponse(response)
+                    parseArticles(response.getJSONArray("articles"))
+                    articlesLiveData.value = articlesData
                 },
-                Response.ErrorListener { error -> textView.text = "ERROR: %s".format(error.toString())
-                }
+                Response.ErrorListener { error -> textView.text = "articles error: %s".format(error.toString()) }
             ) {
-                @Throws(AuthFailureError::class)
                 override fun getHeaders(): Map<String, String> {
                     val params: MutableMap<String, String> =
                         HashMap()

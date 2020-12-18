@@ -8,6 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
@@ -23,11 +24,10 @@ import org.json.JSONArray
 
 class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
 
-//    val API_KEY = "ee05a54c472449fd9afb26a8f0756a88"
-    val API_KEY = "d31f5fa5f03443dd8a1b9e3fde92ec34"
-    val LANG = "fr"
-    val API_URL_SOURCES = "https://newsapi.org/v2/sources?apiKey=$API_KEY&language=$LANG"
-    val API_URL = "https://newsapi.org/v2/everything?apiKey=$API_KEY&language=$LANG"
+    private val API_KEY = "d31f5fa5f03443dd8a1b9e3fde92ec34"
+    private val LANG = "fr"
+    private val API_URL_SOURCES = "https://newsapi.org/v2/sources?apiKey=$API_KEY&language=$LANG"
+    private val API_URL = "https://newsapi.org/v2/everything?apiKey=$API_KEY&language=$LANG"
 
     var sources = JSONArray()
     var selectedSource = ""
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
 
     lateinit var queue: RequestQueue
     lateinit var progressBar: ProgressBar
-    lateinit var textView: TextView
+    lateinit var alertBox: AlertDialog.Builder
     lateinit var sharedPref: SharedPreferences
 
 
@@ -46,12 +46,11 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
         setContentView(R.layout.activity_main)
         queue = Volley.newRequestQueue(this)
         progressBar = findViewById<ProgressBar>(R.id.progressBar)
-        textView = findViewById<TextView>(R.id.texty)
         sharedPref = getPreferences(Context.MODE_PRIVATE)
+        setUpAlertDialogBuilder()
         requestSourcesFromAPI()
 
 
-        textView.text = "shared : $sharedPref"
 
         val recyclerAdapter = RecyclerAdapter(articlesData, this)
         val recyclerView: RecyclerView = findViewById(R.id.rv_recyclerView)
@@ -87,11 +86,27 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
         return true
     }
 
+    private fun setUpAlertDialogBuilder() {
+        alertBox = this.let {
+            AlertDialog.Builder(it)
+        }
+        alertBox.setTitle("Un problème sauvage apparait !")
+            .apply{
+                setPositiveButton("Retry") { _, _ ->
+                    requestSourcesFromAPI()
+                }
+            }
+    }
+
+    private fun showAlertDialog(message: String) {
+        alertBox.setMessage(message)
+        val alertDialog: AlertDialog = alertBox.create()
+        alertDialog.show()
+    }
 
     private fun requestSourcesFromAPI() {
         progressBar.isVisible = true
         val url = API_URL_SOURCES
-        val textView = findViewById<TextView>(R.id.texty)
 
         val getRequest: JsonObjectRequest =
             object : JsonObjectRequest(
@@ -101,7 +116,7 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
                     sharedPref.getString("selectedSource", null)?.let { requestArticlesFromAPI(it) }
                     progressBar.isVisible = false
                 },
-                Response.ErrorListener { error -> textView.text = "No sources, error: ${(error.toString())}" }
+                Response.ErrorListener { error-> showAlertDialog("Missing sources : $error") }
             ) {
                 override fun getHeaders(): Map<String, String> {
                     val params: MutableMap<String, String> =
@@ -121,7 +136,6 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
         selectedSource = source ?: sources.getJSONObject(0).getString("id")
 
         val url = "$API_URL&sources=$selectedSource"
-        val textView = findViewById<TextView>(R.id.texty)
 
         val getRequest: JsonObjectRequest =
             object : JsonObjectRequest(
@@ -130,7 +144,7 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
                     parseArticles(response.getJSONArray("articles")) // doit rendre articleData
                     progressBar.isVisible = false
                 },
-                Response.ErrorListener { error -> textView.text = "articles error: ${(error.toString())} source : $selectedSource" }
+                Response.ErrorListener { error -> showAlertDialog("Missing articles : $error") }
             ) {
                 override fun getHeaders(): Map<String, String> {
                     val params: MutableMap<String, String> =

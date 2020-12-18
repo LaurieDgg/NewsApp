@@ -11,8 +11,6 @@ class Article {
     var link: String = ""
     var urlToImage: String? = ""
 
-    constructor() {}
-
     constructor(article: JSONObject) {
         this.title = article.getString("title")
         this.author = article.getString("author")

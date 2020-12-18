@@ -58,7 +58,7 @@ class ArticleDetailActivity : AppCompatActivity() {
 
 
 
-
+//          Tentative de fragment abandonnée
 //        if (savedInstanceState == null) {
 //            var fragment: FirstFragment = FirstFragment()
 //            fragment.arguments = intent.extras

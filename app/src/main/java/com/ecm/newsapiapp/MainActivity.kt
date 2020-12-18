@@ -11,7 +11,6 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-//import androidx.lifecycle.observe
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.RequestQueue
 import com.android.volley.Response
@@ -20,29 +19,23 @@ import com.android.volley.toolbox.Volley
 import org.json.JSONArray
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
 
-    private var titlesList = mutableListOf<String>()
-    private var descList = mutableListOf<String>()
-    private var dateList = mutableListOf<String>()
-    private var imagesList = mutableListOf<Int>()
-
-    val LANG = "fr"
 //    val API_KEY = "ee05a54c472449fd9afb26a8f0756a88"
     val API_KEY = "d31f5fa5f03443dd8a1b9e3fde92ec34"
+    val LANG = "fr"
     val API_URL_SOURCES = "https://newsapi.org/v2/sources?apiKey=$API_KEY&language=$LANG"
     val API_URL = "https://newsapi.org/v2/everything?apiKey=$API_KEY&language=$LANG"
 
     var sources = JSONArray()
     var selectedSource = ""
 
+    var articlesData = ArrayList<Article>()
+    var articlesLiveData = MutableLiveData<ArrayList<Article>>()
+
     lateinit var queue: RequestQueue
     lateinit var progressBar: ProgressBar
     lateinit var textView: TextView
-
-    var articlesData = ArrayList<Article>()
-
-    var articlesLiveData = MutableLiveData<ArrayList<Article>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
         requestSourcesFromAPI()
 
-        val recyclerAdapter = RecyclerAdapter { article -> onClick(article) }
+        val recyclerAdapter = RecyclerAdapter(articlesData, this)
         val recyclerView: RecyclerView = findViewById(R.id.rv_recyclerView)
 
         recyclerView.adapter = recyclerAdapter
@@ -62,11 +55,6 @@ class MainActivity : AppCompatActivity() {
         articlesLiveData.observe(this, Observer { it?.let {
             recyclerAdapter.submitList(it.toMutableList())
         } })
-    }
-
-    private fun onClick(article: Article) {
-        val intent = Intent(this, ArticleDetailActivity()::class.java)
-        startActivity(intent)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -152,5 +140,19 @@ class MainActivity : AppCompatActivity() {
 
         articlesLiveData.value = articlesData
         }
+    }
+
+    override fun onArticleClick(position: Int) {
+        val article = articlesData[position]
+        val intent = Intent(this, ArticleDetailActivity::class.java)
+
+        intent.putExtra("author", article.author)
+        intent.putExtra("date", article.date)
+        intent.putExtra("sourceName", article.sourceName)
+        intent.putExtra("description", article.description)
+        intent.putExtra("link", article.link)
+        intent.putExtra("url", article.urlToImage)
+
+        startActivity(intent)
     }
 }

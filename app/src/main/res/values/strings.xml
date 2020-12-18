@@ -1,6 +1,5 @@
 <resources>
-    <string name="app_name">NewsAPIApp</string>
-    <string name="title_activity_article_reading">ScrollingActivity</string>
+    <string name="app_name">Breaking News</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
 
@@ -91,11 +90,11 @@
         "when a user tries to pick up one of cards.\n\n"
     </string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_article_detail">articleDetailActivity</string>
+    <string name="title_activity_article_detail"> </string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
+    <string name="next">Read online</string>
     <string name="previous">Previous</string>
 
     <string name="hello_first_fragment">Hello first fragment</string>

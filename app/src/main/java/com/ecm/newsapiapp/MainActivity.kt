@@ -1,6 +1,8 @@
 package com.ecm.newsapiapp
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -36,6 +38,8 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
     lateinit var queue: RequestQueue
     lateinit var progressBar: ProgressBar
     lateinit var textView: TextView
+    lateinit var sharedPref: SharedPreferences
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,8 +47,11 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
         queue = Volley.newRequestQueue(this)
         progressBar = findViewById<ProgressBar>(R.id.progressBar)
         textView = findViewById<TextView>(R.id.texty)
-
+        sharedPref = getPreferences(Context.MODE_PRIVATE)
         requestSourcesFromAPI()
+
+
+        textView.text = "shared : $sharedPref"
 
         val recyclerAdapter = RecyclerAdapter(articlesData, this)
         val recyclerView: RecyclerView = findViewById(R.id.rv_recyclerView)
@@ -91,9 +98,10 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
                 Method.GET, url, null,
                 Response.Listener{ response ->
                     sources = response.getJSONArray("sources")
+                    sharedPref.getString("selectedSource", null)?.let { requestArticlesFromAPI(it) }
                     progressBar.isVisible = false
                 },
-                Response.ErrorListener { error -> textView.text = "No sources, error: %s".format(error.toString()) }
+                Response.ErrorListener { error -> textView.text = "No sources, error: ${(error.toString())}" }
             ) {
                 override fun getHeaders(): Map<String, String> {
                     val params: MutableMap<String, String> =
@@ -106,9 +114,11 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
     }
 
 
-    private fun requestArticlesFromAPI(selectedSource: String) {
+    private fun requestArticlesFromAPI(source: String?) {
         progressBar.isVisible = true
         articlesData = ArrayList<Article>()
+
+        selectedSource = source ?: sources.getJSONObject(0).getString("id")
 
         val url = "$API_URL&sources=$selectedSource"
         val textView = findViewById<TextView>(R.id.texty)
@@ -120,7 +130,7 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
                     parseArticles(response.getJSONArray("articles")) // doit rendre articleData
                     progressBar.isVisible = false
                 },
-                Response.ErrorListener { error -> textView.text = "articles error: %s".format(error.toString()) }
+                Response.ErrorListener { error -> textView.text = "articles error: ${(error.toString())} source : $selectedSource" }
             ) {
                 override fun getHeaders(): Map<String, String> {
                     val params: MutableMap<String, String> =
@@ -146,6 +156,7 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
         val article = articlesData[position]
         val intent = Intent(this, ArticleDetailActivity::class.java)
 
+        intent.putExtra("title", article.title)
         intent.putExtra("author", article.author)
         intent.putExtra("date", article.date)
         intent.putExtra("sourceName", article.sourceName)
@@ -154,5 +165,12 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnArticleListener {
         intent.putExtra("url", article.urlToImage)
 
         startActivity(intent)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val editor = sharedPref.edit()
+        editor.putString("selectedSource", selectedSource)
+        editor.apply()
     }
 }

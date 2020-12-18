@@ -22,7 +22,6 @@ class RecyclerAdapter (private val articles: ArrayList<Article>,
         val itemAuthor: TextView = itemView.findViewById(R.id.tv_author)
         val itemDate: TextView = itemView.findViewById(R.id.tv_date)
         val itemPicture: ImageView = itemView.findViewById(R.id.iv_image)
-        var currentArticle: Article? = null
 
         init {
             itemView.setOnClickListener {
@@ -37,8 +36,11 @@ class RecyclerAdapter (private val articles: ArrayList<Article>,
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ArticleViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_layout, parent, false)
-        return ArticleViewHolder(view, mOnArticleListener)
+        return if (viewType == 0) {
+            ArticleViewHolder( LayoutInflater.from(parent.context).inflate(R.layout.item_layout_0, parent, false), mOnArticleListener)
+        } else {
+            ArticleViewHolder( LayoutInflater.from(parent.context).inflate(R.layout.item_layout_1, parent, false), mOnArticleListener)
+        }
     }
 
     override fun onBindViewHolder(holder: ArticleViewHolder, position: Int) {
@@ -57,6 +59,10 @@ class RecyclerAdapter (private val articles: ArrayList<Article>,
 
     override fun getItemCount(): Int {
         return super.getItemCount()
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return position % 2
     }
 }
 

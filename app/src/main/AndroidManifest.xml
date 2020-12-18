@@ -12,9 +12,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NewsAPIApp">
         <activity
+            android:name=".ArticleDetailActivity"
+            android:label="@string/title_activity_article_detail"
+            android:theme="@style/Theme.NewsAPIApp.NoActionBar"></activity>
+        <activity
             android:name=".ArticleReading"
             android:label="@string/title_activity_article_reading"
-            android:theme="@style/Theme.NewsAPIApp.NoActionBar"></activity>
+            android:theme="@style/Theme.NewsAPIApp.NoActionBar" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

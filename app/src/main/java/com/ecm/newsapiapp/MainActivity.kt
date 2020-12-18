@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         requestSourcesFromAPI()
 
-        val recyclerAdapter = RecyclerAdapter { article -> adapterOnClick(article) }
+        val recyclerAdapter = RecyclerAdapter { article -> onClick(article) }
         val recyclerView: RecyclerView = findViewById(R.id.rv_recyclerView)
 
         recyclerView.adapter = recyclerAdapter
@@ -64,9 +64,8 @@ class MainActivity : AppCompatActivity() {
         } })
     }
 
-    private fun adapterOnClick(article: Article) {
-        val intent = Intent(this, ArticleReading()::class.java)
-//        intent.putExtra(FLOWER_ID, flower.id)
+    private fun onClick(article: Article) {
+        val intent = Intent(this, ArticleDetailActivity()::class.java)
         startActivity(intent)
     }
 
@@ -154,14 +153,4 @@ class MainActivity : AppCompatActivity() {
         articlesLiveData.value = articlesData
         }
     }
-
-//    private fun setUpRecyclerView() {
-//        viewManager = LinearLayoutManager(this)
-//        viewAdapter = RecyclerAdapter(articlesData)
-//
-//        recyclerView = findViewById<RecyclerView>(R.id.recyclerView).apply {
-//            setHasFixedSize(true)
-//            layoutManager = viewManager
-//            adapter = viewAdapter
-//        }
 }

@@ -9,7 +9,9 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.observe
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
+//import androidx.lifecycle.observe
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.RequestQueue
 import com.android.volley.Response
@@ -35,31 +37,31 @@ class MainActivity : AppCompatActivity() {
     var selectedSource = ""
 
     lateinit var queue: RequestQueue
-    lateinit var rv_recyclerView: RecyclerView
     lateinit var progressBar: ProgressBar
+    lateinit var textView: TextView
 
     var articlesData = ArrayList<Article>()
-    var articlesLiveData = MutableLiveData<ArrayList<Article>>()
 
-    lateinit var textView: TextView
+    var articlesLiveData = MutableLiveData<ArrayList<Article>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         queue = Volley.newRequestQueue(this)
         progressBar = findViewById<ProgressBar>(R.id.progressBar)
+        textView = findViewById<TextView>(R.id.texty)
 
         requestSourcesFromAPI()
 
         val recyclerAdapter = RecyclerAdapter { article -> adapterOnClick(article) }
-
         val recyclerView: RecyclerView = findViewById(R.id.rv_recyclerView)
+
         recyclerView.adapter = recyclerAdapter
-        articlesLiveData.observe(this) {
-            it?.let {
-                recyclerAdapter.submitList(it as MutableList<Article>)
-            }
-        }
+        recyclerView.layoutManager = LinearLayoutManager(this)
+
+        articlesLiveData.observe(this, Observer { it?.let {
+            recyclerAdapter.submitList(it.toMutableList())
+        } })
     }
 
     private fun adapterOnClick(article: Article) {
@@ -68,8 +70,6 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-
-//    menu de selection des sources
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
         return true
@@ -86,34 +86,11 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         super.onOptionsItemSelected(item)
         selectedSource = sources.getJSONObject(item.itemId).getString("id")
         requestArticlesFromAPI(selectedSource)
         return true
-    }
-
-//    private fun addToList(title: String, description: String, date: String, image: Int) {
-//        titlesList.add(title)
-//        descList.add(description)
-//        dateList.add(date)
-//        imagesList.add(image)
-//    }
-//
-//    private fun clearRecycler() {
-//        titlesList.clear()
-//        descList.clear()
-//        dateList.clear()
-//        imagesList.clear()
-//    }
-
-    private fun parseArticles(articles: JSONArray) {
-        for (i in 0 until articles.length()) {
-            val article = articles.getJSONObject(i)
-            val articlePreview = Article(article)
-            articlesData.add(articlePreview)
-        }
     }
 
 
@@ -141,8 +118,11 @@ class MainActivity : AppCompatActivity() {
         queue.add(getRequest)
     }
 
+
     private fun requestArticlesFromAPI(selectedSource: String) {
         progressBar.isVisible = true
+        articlesData = ArrayList<Article>()
+
         val url = "$API_URL&sources=$selectedSource"
         val textView = findViewById<TextView>(R.id.texty)
 
@@ -150,8 +130,8 @@ class MainActivity : AppCompatActivity() {
             object : JsonObjectRequest(
                 Method.GET, url, null,
                 Response.Listener { response ->
-                    parseArticles(response.getJSONArray("articles"))
-                    articlesLiveData.value = articlesData
+                    parseArticles(response.getJSONArray("articles")) // doit rendre articleData
+                    progressBar.isVisible = false
                 },
                 Response.ErrorListener { error -> textView.text = "articles error: %s".format(error.toString()) }
             ) {
@@ -164,4 +144,24 @@ class MainActivity : AppCompatActivity() {
             }
         queue.add(getRequest)
     }
+
+    private fun parseArticles(articles: JSONArray) {
+        for (i in 0 until articles.length()) {
+            val article = articles.getJSONObject(i)
+            val articlePreview = Article(article)
+            articlesData.add(articlePreview)
+
+        articlesLiveData.value = articlesData
+        }
+    }
+
+//    private fun setUpRecyclerView() {
+//        viewManager = LinearLayoutManager(this)
+//        viewAdapter = RecyclerAdapter(articlesData)
+//
+//        recyclerView = findViewById<RecyclerView>(R.id.recyclerView).apply {
+//            setHasFixedSize(true)
+//            layoutManager = viewManager
+//            adapter = viewAdapter
+//        }
 }

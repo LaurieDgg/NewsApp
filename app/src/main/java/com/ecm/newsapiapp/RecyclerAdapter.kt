@@ -17,11 +17,11 @@ class RecyclerAdapter (private val onClick: (Article) -> Unit) :
     class ArticleViewHolder(itemView: View, val onClick: (Article) -> Unit) :
         RecyclerView.ViewHolder(itemView) {
 
-        private val itemTitle: TextView = itemView.findViewById(R.id.tv_title)
-        private val itemDetail: TextView = itemView.findViewById(R.id.tv_description)
-        private val itemDate: TextView = itemView.findViewById(R.id.tv_date)
-        private val itemPicture: ImageView = itemView.findViewById(R.id.iv_image)
-        private var currentArticle: Article? = null
+        val itemTitle: TextView = itemView.findViewById(R.id.tv_title)
+        val itemAuthor: TextView = itemView.findViewById(R.id.tv_author)
+        val itemDate: TextView = itemView.findViewById(R.id.tv_date)
+        val itemPicture: ImageView = itemView.findViewById(R.id.iv_image)
+        var currentArticle: Article? = null
 
 
         init {
@@ -29,19 +29,6 @@ class RecyclerAdapter (private val onClick: (Article) -> Unit) :
                 currentArticle?.let {
                     onClick(it)
                 }
-            }
-        }
-
-        fun bind(article: Article) {
-            currentArticle = article
-
-            itemTitle.text = article.title
-            itemDetail.text = article.description
-            itemDate.text = article.date
-            if (article.urlToImage != null) {
-                itemPicture.setImageResource(R.drawable.default_article_img)
-            } else {
-                itemPicture.setImageResource(R.drawable.default_article_img)
             }
         }
     }
@@ -54,13 +41,17 @@ class RecyclerAdapter (private val onClick: (Article) -> Unit) :
 
     override fun onBindViewHolder(holder: RecyclerAdapter.ArticleViewHolder, position: Int) {
         val article = getItem(position)
-        holder.bind(article)
+//        currentArticle = article
+        holder.itemTitle.text = article.title
+        holder.itemAuthor.text = article.author
+        holder.itemDate.text = article.date
+        if (article.urlToImage != null) {
+            holder.itemPicture.setImageResource(R.drawable.default_article_img_resized)
+        } else {
+            holder.itemPicture.setImageResource(R.drawable.default_article_img_resized)
+        }
     }
 }
-
-//    override fun getItemCount(): Int {
-//        return titles.size
-//    }
 
 object ArticleDiffCallback : DiffUtil.ItemCallback<Article>() {
     override fun areItemsTheSame(oldItem: Article, newItem: Article): Boolean {

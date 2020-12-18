@@ -23,7 +23,9 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_margin="5dp"
-            android:src="@mipmap/ic_launcher_round" />
+            android:src="@mipmap/ic_launcher_round"
+            android:maxWidth="100dp"
+            android:maxHeight="10dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -46,7 +48,7 @@
                 android:textSize="15sp" />
 
             <TextView
-                android:id="@+id/tv_description"
+                android:id="@+id/tv_author"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
